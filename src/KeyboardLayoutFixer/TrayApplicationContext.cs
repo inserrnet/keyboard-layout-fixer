@@ -12,6 +12,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     public TrayApplicationContext()
     {
         _settings = AppSettings.Load();
+        WordDictionaries.EnsureUserDictionaryFiles();
         _hook = new KeyboardHook(_settings);
 
         _notifyIcon = new NotifyIcon
@@ -72,6 +73,13 @@ internal sealed class TrayApplicationContext : ApplicationContext
             Process.Start(new ProcessStartInfo(AppSettings.FilePath) { UseShellExecute = true });
         };
 
+        var dictionariesItem = new ToolStripMenuItem("Открыть словари");
+        dictionariesItem.Click += (_, _) =>
+        {
+            WordDictionaries.EnsureUserDictionaryFiles();
+            Process.Start(new ProcessStartInfo(Path.Combine(AppSettings.DirectoryPath, "dictionaries")) { UseShellExecute = true });
+        };
+
         var exitItem = new ToolStripMenuItem("Выход");
         exitItem.Click += (_, _) => ExitThread();
 
@@ -79,6 +87,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(autoCorrectItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(settingsItem);
+        menu.Items.Add(dictionariesItem);
         menu.Items.Add(exitItem);
         return menu;
     }
