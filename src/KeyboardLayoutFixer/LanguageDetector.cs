@@ -34,7 +34,7 @@ internal sealed class LanguageDetector
         }
 
         var converted = LayoutMaps.ConvertToRussian(word);
-        if (LooksRussian(converted) && WordDictionaries.Russian.Contains(converted) && !WordDictionaries.English.Contains(word))
+        if (LooksRussian(converted) && IsRussianWord(converted) && !IsEnglishWord(word))
         {
             return new CorrectionDecision(true, autoCorrect, LayoutLanguage.Russian, converted);
         }
@@ -50,7 +50,7 @@ internal sealed class LanguageDetector
         }
 
         var converted = LayoutMaps.ConvertToEnglish(word);
-        if (LooksEnglish(converted) && WordDictionaries.English.Contains(converted) && !WordDictionaries.Russian.Contains(word))
+        if (LooksEnglish(converted) && IsEnglishWord(converted) && !IsRussianWord(word))
         {
             return new CorrectionDecision(true, autoCorrect, LayoutLanguage.English, converted);
         }
@@ -61,6 +61,16 @@ internal sealed class LanguageDetector
     private static bool LooksEnglish(string word) => word.All(ch => char.IsLetter(ch) && ch <= 127);
 
     private static bool LooksRussian(string word) => word.All(ch => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё');
+
+    private static bool IsEnglishWord(string word) =>
+        SystemSpellChecker.HasEnglishChecker
+            ? SystemSpellChecker.IsEnglishWord(word)
+            : WordDictionaries.English.Contains(word);
+
+    private static bool IsRussianWord(string word) =>
+        SystemSpellChecker.HasRussianChecker
+            ? SystemSpellChecker.IsRussianWord(word)
+            : WordDictionaries.Russian.Contains(word);
 
     private static bool IsEnglishKeyboardChar(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z'
         or '[' or ']' or ';' or '\'' or ',' or '.' or '`';
