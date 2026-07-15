@@ -73,7 +73,7 @@ internal sealed class KeyboardHook : IDisposable
             return NativeMethods.CallNextHookEx(_hook, nCode, wParam, lParam);
         }
 
-        if (IsWordCharacter(typed.Value))
+        if (IsWordCharacter(typed.Value, language))
         {
             if (_currentWord.Length < 48)
             {
@@ -203,7 +203,20 @@ internal sealed class KeyboardHook : IDisposable
         }
     }
 
-    private static bool IsWordCharacter(char ch) => char.IsLetter(ch) || ch is '\'' or '-';
+    private static bool IsWordCharacter(char ch, LayoutLanguage language)
+    {
+        if (char.IsLetter(ch) || ch is '-')
+        {
+            return true;
+        }
+
+        return language switch
+        {
+            LayoutLanguage.English => ch is '[' or ']' or ';' or '\'' or ',' or '.' or '`',
+            LayoutLanguage.Russian => ch is '[' or ']' or ';' or '\'' or ',' or '.' or '`',
+            _ => false
+        };
+    }
 
     public void Dispose()
     {
