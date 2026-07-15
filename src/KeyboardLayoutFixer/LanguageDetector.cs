@@ -24,37 +24,24 @@ internal sealed class LanguageDetector
     private static readonly FrozenSet<string> CommonRussian = new[]
     {
         "привет", "тест", "да", "нет", "спасибо", "пожалуйста", "что", "где", "когда", "это", "как", "для", "или", "если",
-        "текст", "код", "файл", "почта", "пароль", "работа", "можно", "нужно", "хорошо", "плохо"
+        "текст", "код", "файл", "почта", "пароль", "работа", "можно", "нужно", "хорошо", "плохо",
+        "теперь", "русские", "слова", "предыдущее", "предложение", "пример", "пишу", "печатаю", "исправляет",
+        "раскладка", "раскладку", "автоисправление", "отключено", "включено", "сейчас"
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     public CorrectionDecision Analyze(string word, LayoutLanguage currentLanguage, bool autoCorrect, int minimumLength)
     {
-        if (word.Length < minimumLength || word.Any(char.IsDigit) || word.Contains('@') || word.Contains('/'))
+        if (!autoCorrect || word.Length < minimumLength || word.Any(char.IsDigit) || word.Contains('@') || word.Contains('/'))
         {
             return new CorrectionDecision(false, false, LayoutLanguage.Other, word);
         }
 
-        var preferred = currentLanguage switch
+        return currentLanguage switch
         {
             LayoutLanguage.English => AnalyzeEnglishInput(word, autoCorrect),
             LayoutLanguage.Russian => AnalyzeRussianInput(word, autoCorrect),
             _ => new CorrectionDecision(false, false, LayoutLanguage.Other, word)
         };
-        if (preferred.ShouldSwitch)
-        {
-            return preferred;
-        }
-
-        var englishToRussian = AnalyzeEnglishInput(word, autoCorrect);
-        if (englishToRussian.ShouldSwitch)
-        {
-            return englishToRussian;
-        }
-
-        var russianToEnglish = AnalyzeRussianInput(word, autoCorrect);
-        return russianToEnglish.ShouldSwitch
-            ? russianToEnglish
-            : new CorrectionDecision(false, false, LayoutLanguage.Other, word);
     }
 
     private static CorrectionDecision AnalyzeEnglishInput(string word, bool autoCorrect)
@@ -65,7 +52,7 @@ internal sealed class LanguageDetector
         }
 
         var converted = LayoutMaps.ConvertToRussian(word);
-        if (LooksRussian(converted) && ScoreRussian(converted) >= ScoreEnglish(word) + 2)
+        if (LooksRussian(converted) && ScoreRussianCandidate(converted, word) >= ScoreEnglish(word) + 1)
         {
             return new CorrectionDecision(true, autoCorrect, LayoutLanguage.Russian, converted);
         }
@@ -113,6 +100,22 @@ internal sealed class LanguageDetector
         }
 
         if (original.Any(ch => "ъхжэ".Contains(char.ToLowerInvariant(ch))))
+        {
+            score += 1;
+        }
+
+        return score;
+    }
+
+    private static int ScoreRussianCandidate(string converted, string original)
+    {
+        var score = ScoreRussian(converted);
+        if (original.Any(ch => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z'))
+        {
+            score += 2;
+        }
+
+        if (original.Any(ch => "qwertyuiop[]asdfghjkl;'zxcvbnm,.`".Contains(char.ToLowerInvariant(ch))))
         {
             score += 1;
         }
