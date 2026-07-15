@@ -13,7 +13,9 @@ internal sealed class LanguageDetector
 {
     public CorrectionDecision Analyze(string word, LayoutLanguage currentLanguage, bool autoCorrect, int minimumLength)
     {
-        if (!autoCorrect || word.Length < minimumLength || word.Any(char.IsDigit) || word.Contains('@') || word.Contains('/'))
+        _ = minimumLength;
+
+        if (!autoCorrect || word.Length == 0 || word.Any(char.IsDigit) || word.Contains('@') || word.Contains('/'))
         {
             return new CorrectionDecision(false, false, LayoutLanguage.Other, word);
         }

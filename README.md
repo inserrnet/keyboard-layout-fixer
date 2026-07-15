@@ -33,4 +33,4 @@ dotnet publish src/KeyboardLayoutFixer/KeyboardLayoutFixer.csproj `
 
 ## Notes
 
-The app is intentionally conservative: it waits until a word is completed and only acts when the converted word is recognized by Windows Spell Checking or by the local dictionary. To add a word manually, select it in any app and press `Ctrl+Shift+D`. Apps such as terminals and code editors are excluded by default in the settings file.
+The app waits until a word is completed and acts when the converted word is recognized by Windows Spell Checking or by the local dictionary, including short words such as `I`, `go`, `to`, `я`, `ну`, `да`, and `не`. To add a word manually, select it in any app and press `Ctrl+Shift+D`. Apps such as terminals and code editors are excluded by default in the settings file.
