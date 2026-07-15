@@ -13,6 +13,7 @@ The app watches only the current word locally, detects obvious cases like `ghbdt
 - Stores settings in `%APPDATA%\KeyboardLayoutFixer\settings.json`.
 - Uses Windows Spell Checking when it is available for the language.
 - Uses local dictionaries in `%APPDATA%\KeyboardLayoutFixer\dictionaries\` as a fallback.
+- Adds a selected word to the user dictionary with `Ctrl+Shift+D`.
 - Does not send typed text anywhere and does not keep typing logs.
 
 ## Build
@@ -32,4 +33,4 @@ dotnet publish src/KeyboardLayoutFixer/KeyboardLayoutFixer.csproj `
 
 ## Notes
 
-The app is intentionally conservative: it waits until a word is completed and only acts when the converted word is recognized by Windows Spell Checking or by the fallback local dictionary. Apps such as terminals and code editors are excluded by default in the settings file.
+The app is intentionally conservative: it waits until a word is completed and only acts when the converted word is recognized by Windows Spell Checking or by the local dictionary. To add a word manually, select it in any app and press `Ctrl+Shift+D`. Apps such as terminals and code editors are excluded by default in the settings file.

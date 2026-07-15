@@ -1,9 +1,9 @@
-using System.Collections.Frozen;
-
 namespace KeyboardLayoutFixer;
 
 internal static class WordDictionaries
 {
+    private static readonly object SyncRoot = new();
+
     private static readonly string[] BuiltInEnglish =
     [
         "auto", "bad", "browser", "chat", "code", "correct", "download", "email", "english", "example",
@@ -22,9 +22,9 @@ internal static class WordDictionaries
         "это"
     ];
 
-    public static FrozenSet<string> English { get; } = Load("en.txt", BuiltInEnglish);
+    public static HashSet<string> English { get; } = Load("en.txt", BuiltInEnglish);
 
-    public static FrozenSet<string> Russian { get; } = Load("ru.txt", BuiltInRussian);
+    public static HashSet<string> Russian { get; } = Load("ru.txt", BuiltInRussian);
 
     public static void EnsureUserDictionaryFiles()
     {
@@ -33,16 +33,56 @@ internal static class WordDictionaries
         EnsureFile("ru.txt", BuiltInRussian);
     }
 
+    public static bool AddWord(LayoutLanguage language, string word)
+    {
+        var normalized = Normalize(word);
+        if (normalized.Length == 0)
+        {
+            return false;
+        }
+
+        var fileName = language switch
+        {
+            LayoutLanguage.English => "en.txt",
+            LayoutLanguage.Russian => "ru.txt",
+            _ => null
+        };
+
+        var dictionary = language switch
+        {
+            LayoutLanguage.English => English,
+            LayoutLanguage.Russian => Russian,
+            _ => null
+        };
+
+        if (fileName is null || dictionary is null)
+        {
+            return false;
+        }
+
+        lock (SyncRoot)
+        {
+            if (!dictionary.Add(normalized))
+            {
+                return false;
+            }
+
+            Directory.CreateDirectory(DictionaryDirectory);
+            File.AppendAllLines(Path.Combine(DictionaryDirectory, fileName), [normalized]);
+            return true;
+        }
+    }
+
     private static string DictionaryDirectory => Path.Combine(AppSettings.DirectoryPath, "dictionaries");
 
     private static string BundledDictionaryDirectory => Path.Combine(AppContext.BaseDirectory, "data", "dictionaries");
 
-    private static FrozenSet<string> Load(string fileName, IEnumerable<string> builtInWords)
+    private static HashSet<string> Load(string fileName, IEnumerable<string> builtInWords)
     {
         var words = new HashSet<string>(builtInWords.Select(Normalize), StringComparer.OrdinalIgnoreCase);
         LoadFile(Path.Combine(BundledDictionaryDirectory, fileName), words);
         LoadFile(Path.Combine(DictionaryDirectory, fileName), words);
-        return words.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+        return words;
     }
 
     private static void LoadFile(string path, HashSet<string> words)

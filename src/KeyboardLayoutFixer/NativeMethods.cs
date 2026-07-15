@@ -13,7 +13,14 @@ internal static class NativeMethods
     public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint KEYEVENTF_UNICODE = 0x0004;
     public const uint LLKHF_INJECTED = 0x00000010;
+    public const int WM_HOTKEY = 0x0312;
+    public const uint MOD_SHIFT = 0x0004;
+    public const uint MOD_CONTROL = 0x0002;
     public const ushort VK_BACK = 0x08;
+    public const ushort VK_SHIFT = 0x10;
+    public const ushort VK_CONTROL = 0x11;
+    public const ushort VK_C = 0x43;
+    public const ushort VK_D = 0x44;
 
     public delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
 
@@ -107,4 +114,15 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint cInputs, Input[] pInputs, int cbSize);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool UnregisterHotKey(nint hWnd, int id);
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
 }

@@ -63,14 +63,12 @@ internal sealed class LanguageDetector
     private static bool LooksRussian(string word) => word.All(ch => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё');
 
     private static bool IsEnglishWord(string word) =>
-        SystemSpellChecker.HasEnglishChecker
-            ? SystemSpellChecker.IsEnglishWord(word)
-            : WordDictionaries.English.Contains(word);
+        WordDictionaries.English.Contains(word) ||
+        (SystemSpellChecker.HasEnglishChecker && SystemSpellChecker.IsEnglishWord(word));
 
     private static bool IsRussianWord(string word) =>
-        SystemSpellChecker.HasRussianChecker
-            ? SystemSpellChecker.IsRussianWord(word)
-            : WordDictionaries.Russian.Contains(word);
+        WordDictionaries.Russian.Contains(word) ||
+        (SystemSpellChecker.HasRussianChecker && SystemSpellChecker.IsRussianWord(word));
 
     private static bool IsEnglishKeyboardChar(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z'
         or '[' or ']' or ';' or '\'' or ',' or '.' or '`';

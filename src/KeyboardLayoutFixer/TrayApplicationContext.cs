@@ -8,6 +8,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly KeyboardHook _hook;
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _startupRetryTimer;
+    private readonly GlobalHotkeyWindow _hotkeyWindow;
 
     public TrayApplicationContext()
     {
@@ -23,6 +24,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             ContextMenuStrip = BuildMenu()
         };
 
+        _hotkeyWindow = new GlobalHotkeyWindow(() => SelectedWordDictionaryAdder.AddSelectedWord(_notifyIcon));
         _hook.Start();
         _startupRetryTimer = new System.Windows.Forms.Timer { Interval = 300 };
         _startupRetryTimer.Tick += (_, _) =>
@@ -37,6 +39,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _startupRetryTimer.Start();
 
         _notifyIcon.ShowBalloonTip(2000, "Keyboard Layout Fixer", "Утилита запущена локально.", ToolTipIcon.Info);
+        if (!_hotkeyWindow.IsRegistered)
+        {
+            _notifyIcon.ShowBalloonTip(2500, "Keyboard Layout Fixer", "Ctrl+Shift+D уже занята другой программой.", ToolTipIcon.Warning);
+        }
     }
 
     private ContextMenuStrip BuildMenu()
@@ -80,12 +86,18 @@ internal sealed class TrayApplicationContext : ApplicationContext
             Process.Start(new ProcessStartInfo(Path.Combine(AppSettings.DirectoryPath, "dictionaries")) { UseShellExecute = true });
         };
 
+        var hotkeyInfoItem = new ToolStripMenuItem("Добавить выделенное слово: Ctrl+Shift+D")
+        {
+            Enabled = false
+        };
+
         var exitItem = new ToolStripMenuItem("Выход");
         exitItem.Click += (_, _) => ExitThread();
 
         menu.Items.Add(enabledItem);
         menu.Items.Add(autoCorrectItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(hotkeyInfoItem);
         menu.Items.Add(settingsItem);
         menu.Items.Add(dictionariesItem);
         menu.Items.Add(exitItem);
@@ -102,6 +114,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         _notifyIcon.Visible = false;
         _startupRetryTimer.Dispose();
+        _hotkeyWindow.Dispose();
         _notifyIcon.Dispose();
         _hook.Dispose();
         base.ExitThreadCore();
