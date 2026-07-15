@@ -100,7 +100,9 @@ internal sealed class LanguageDetector
 
     private static bool LooksRussian(string word) => word.All(ch => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё');
 
-    private static bool IsEnglishKeyboardChar(char ch) => char.IsLetter(ch) && ch <= 127;
+    private static bool IsEnglishKeyboardChar(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z'
+        or '[' or ']' or ';' or '\'' or ',' or '.' or '`';
 
-    private static bool IsRussianKeyboardChar(char ch) => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё';
+    private static bool IsRussianKeyboardChar(char ch) => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё'
+        or '[' or ']' or ';' or '\'' or ',' or '.' or '`';
 }
