@@ -8,5 +8,9 @@
     <AssemblyName>KeyboardLayoutFixer</AssemblyName>
     <RootNamespace>KeyboardLayoutFixer</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="app.ico" />
+  </ItemGroup>
 </Project>
