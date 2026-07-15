@@ -4,6 +4,8 @@ namespace KeyboardLayoutFixer;
 
 internal static class SystemSpellChecker
 {
+    private static readonly Guid SpellCheckerFactoryClsid = new("7AB36653-1796-484B-BDFA-E74F1DB7C1DC");
+
     private static readonly Lazy<ISpellChecker?> English = new(() => Create("en-US", "en"));
     private static readonly Lazy<ISpellChecker?> Russian = new(() => Create("ru-RU", "ru"));
 
@@ -38,7 +40,18 @@ internal static class SystemSpellChecker
     {
         try
         {
-            var factory = (ISpellCheckerFactory)new SpellCheckerFactory();
+            var factoryType = Type.GetTypeFromCLSID(SpellCheckerFactoryClsid);
+            if (factoryType is null)
+            {
+                return null;
+            }
+
+            var factory = (ISpellCheckerFactory?)Activator.CreateInstance(factoryType);
+            if (factory is null)
+            {
+                return null;
+            }
+
             foreach (var languageTag in languageTags)
             {
                 factory.IsSupported(languageTag, out var supported);
@@ -61,10 +74,6 @@ internal static class SystemSpellChecker
 
         return null;
     }
-
-    [ComImport]
-    [Guid("7AB36653-1796-484B-BDFA-E74F1DB7C1DC")]
-    private sealed class SpellCheckerFactory;
 
     [ComImport]
     [Guid("8E018A9D-2415-4677-BF08-794EA61F94BB")]
