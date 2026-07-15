@@ -26,19 +26,18 @@ jobs:
       - name: Build
         run: dotnet build KeyboardLayoutFixer.sln --configuration Release --no-restore
 
-      - name: Publish self-contained exe
+      - name: Publish runtime-dependent exe
         run: >
           dotnet publish src/KeyboardLayoutFixer/KeyboardLayoutFixer.csproj
           --configuration Release
           --runtime win-x64
-          --self-contained true
+          --self-contained false
           -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
           -p:EnableCompressionInSingleFile=true
           -o artifacts/KeyboardLayoutFixer
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KeyboardLayoutFixer-win-x64
+          name: KeyboardLayoutFixer-win-x64-runtime-dependent
           path: artifacts/KeyboardLayoutFixer/
