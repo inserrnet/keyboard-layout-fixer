@@ -35,23 +35,31 @@ internal static class WordDictionaries
 
     private static string DictionaryDirectory => Path.Combine(AppSettings.DirectoryPath, "dictionaries");
 
+    private static string BundledDictionaryDirectory => Path.Combine(AppContext.BaseDirectory, "data", "dictionaries");
+
     private static FrozenSet<string> Load(string fileName, IEnumerable<string> builtInWords)
     {
         var words = new HashSet<string>(builtInWords.Select(Normalize), StringComparer.OrdinalIgnoreCase);
-        var path = Path.Combine(DictionaryDirectory, fileName);
-        if (File.Exists(path))
+        LoadFile(Path.Combine(BundledDictionaryDirectory, fileName), words);
+        LoadFile(Path.Combine(DictionaryDirectory, fileName), words);
+        return words.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static void LoadFile(string path, HashSet<string> words)
+    {
+        if (!File.Exists(path))
         {
-            foreach (var line in File.ReadLines(path))
-            {
-                var word = Normalize(line);
-                if (word.Length > 0 && !word.StartsWith('#'))
-                {
-                    words.Add(word);
-                }
-            }
+            return;
         }
 
-        return words.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var line in File.ReadLines(path))
+        {
+            var word = Normalize(line);
+            if (word.Length > 0 && !word.StartsWith('#'))
+            {
+                words.Add(word);
+            }
+        }
     }
 
     private static void EnsureFile(string fileName, IEnumerable<string> builtInWords)
@@ -59,6 +67,13 @@ internal static class WordDictionaries
         var path = Path.Combine(DictionaryDirectory, fileName);
         if (File.Exists(path))
         {
+            return;
+        }
+
+        var bundledPath = Path.Combine(BundledDictionaryDirectory, fileName);
+        if (File.Exists(bundledPath))
+        {
+            File.Copy(bundledPath, path);
             return;
         }
 

@@ -12,5 +12,10 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="app.ico" />
+    <Content Include="..\..\data\dictionaries\*.txt">
+      <Link>data\dictionaries\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>
