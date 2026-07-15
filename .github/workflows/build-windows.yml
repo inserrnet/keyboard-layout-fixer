@@ -33,7 +33,6 @@ jobs:
           --runtime win-x64
           --self-contained false
           -p:PublishSingleFile=true
-          -p:EnableCompressionInSingleFile=true
           -o artifacts/KeyboardLayoutFixer
 
       - name: Upload artifact
