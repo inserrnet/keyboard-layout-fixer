@@ -78,19 +78,19 @@ internal sealed class KeyboardHook : IDisposable
                 _currentWord.Append(typed.Value);
             }
         }
-        else
+        else if (CompleteWord(typed.Value, language, activeWindow))
         {
-            CompleteWord(typed.Value, language, activeWindow);
+            return 1;
         }
 
         return NativeMethods.CallNextHookEx(_hook, nCode, wParam, lParam);
     }
 
-    private void CompleteWord(char delimiter, LayoutLanguage language, nint activeWindow)
+    private bool CompleteWord(char delimiter, LayoutLanguage language, nint activeWindow)
     {
         if (_currentWord.Length == 0)
         {
-            return;
+            return false;
         }
 
         var word = _currentWord.ToString();
@@ -99,17 +99,21 @@ internal sealed class KeyboardHook : IDisposable
         var decision = _detector.Analyze(word, language, _settings.AutoCorrect, _settings.MinimumWordLength);
         if (!decision.ShouldSwitch)
         {
-            return;
+            return false;
         }
 
+        var shouldReplace = decision.ShouldReplace && delimiter is not '\r' and not '\n' and not '\t';
         _context.Post(_ =>
         {
-            SwitchLayout(activeWindow, decision.TargetLanguage);
-            if (decision.ShouldReplace && delimiter is not '\r' and not '\n' and not '\t')
+            if (shouldReplace)
             {
                 ReplaceLastWord(word.Length, delimiter, decision.Replacement);
             }
+
+            SwitchLayout(activeWindow, decision.TargetLanguage);
         }, null);
+
+        return shouldReplace;
     }
 
     private static void SwitchLayout(nint activeWindow, LayoutLanguage targetLanguage)
@@ -121,10 +125,9 @@ internal sealed class KeyboardHook : IDisposable
 
     private static void ReplaceLastWord(int originalLength, char delimiter, string replacement)
     {
-        var deleteCount = originalLength + 1;
         var inputs = new List<NativeMethods.Input>();
 
-        for (var i = 0; i < deleteCount; i++)
+        for (var i = 0; i < originalLength; i++)
         {
             AddVirtualKey(inputs, NativeMethods.VK_BACK);
         }
