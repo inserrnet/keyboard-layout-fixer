@@ -16,7 +16,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         _notifyIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadTrayIcon(),
             Text = "Keyboard Layout Fixer",
             Visible = true,
             ContextMenuStrip = BuildMenu()
@@ -68,6 +68,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(settingsItem);
         menu.Items.Add(exitItem);
         return menu;
+    }
+
+    private static Icon LoadTrayIcon()
+    {
+        var stream = typeof(TrayApplicationContext).Assembly.GetManifestResourceStream("KeyboardLayoutFixer.app.ico");
+        return stream is null ? SystemIcons.Application : new Icon(stream);
     }
 
     protected override void ExitThreadCore()
