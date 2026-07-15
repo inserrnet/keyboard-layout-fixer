@@ -14,6 +14,8 @@ internal sealed class KeyboardHook : IDisposable
     private nint _hook;
     private bool _disposed;
 
+    public bool IsRunning => _hook != 0;
+
     public KeyboardHook(AppSettings settings)
     {
         _settings = settings;
