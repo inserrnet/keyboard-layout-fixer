@@ -7,12 +7,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly AppSettings _settings;
     private readonly KeyboardHook _hook;
     private readonly NotifyIcon _notifyIcon;
+    private readonly System.Windows.Forms.Timer _startupRetryTimer;
 
     public TrayApplicationContext()
     {
         _settings = AppSettings.Load();
         _hook = new KeyboardHook(_settings);
-        _hook.Start();
 
         _notifyIcon = new NotifyIcon
         {
@@ -21,6 +21,19 @@ internal sealed class TrayApplicationContext : ApplicationContext
             Visible = true,
             ContextMenuStrip = BuildMenu()
         };
+
+        _hook.Start();
+        _startupRetryTimer = new System.Windows.Forms.Timer { Interval = 300 };
+        _startupRetryTimer.Tick += (_, _) =>
+        {
+            if (!_hook.IsRunning)
+            {
+                _hook.Start();
+            }
+
+            _startupRetryTimer.Stop();
+        };
+        _startupRetryTimer.Start();
 
         _notifyIcon.ShowBalloonTip(2000, "Keyboard Layout Fixer", "Утилита запущена локально.", ToolTipIcon.Info);
     }
@@ -79,6 +92,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     protected override void ExitThreadCore()
     {
         _notifyIcon.Visible = false;
+        _startupRetryTimer.Dispose();
         _notifyIcon.Dispose();
         _hook.Dispose();
         base.ExitThreadCore();
