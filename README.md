@@ -4,6 +4,11 @@ Local Windows tray utility for Russian/English keyboard layout mistakes.
 
 The app watches only the current word locally, detects obvious cases like `ghbdtn` -> `привет` or `руддщ` -> `hello`, switches the keyboard layout, and can optionally replace the mistyped word.
 
+## Requirements
+
+- Windows x64.
+- .NET Desktop Runtime 8 installed.
+
 ## Features
 
 - Runs locally on Windows.
@@ -15,7 +20,7 @@ The app watches only the current word locally, detects obvious cases like `ghbdt
 
 ## Build
 
-The repository includes a GitHub Actions workflow that builds a self-contained Windows x64 executable.
+The repository includes a GitHub Actions workflow that builds a small runtime-dependent Windows x64 executable.
 
 To build manually on a machine with the .NET SDK:
 
@@ -23,7 +28,7 @@ To build manually on a machine with the .NET SDK:
 dotnet publish src/KeyboardLayoutFixer/KeyboardLayoutFixer.csproj `
   --configuration Release `
   --runtime win-x64 `
-  --self-contained true `
+  --self-contained false `
   -p:PublishSingleFile=true `
   -o artifacts/KeyboardLayoutFixer
 ```
