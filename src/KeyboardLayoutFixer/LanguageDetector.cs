@@ -16,7 +16,9 @@ internal sealed class LanguageDetector
     private static readonly FrozenSet<string> CommonEnglish = new[]
     {
         "hello", "test", "yes", "no", "thanks", "thank", "you", "the", "and", "for", "with", "from", "this", "that", "what",
-        "where", "when", "please", "ok", "okay", "good", "bad", "file", "text", "code", "login", "password", "email", "work"
+        "where", "when", "please", "ok", "okay", "good", "bad", "file", "text", "code", "login", "password", "email", "work",
+        "browser", "program", "layout", "keyboard", "windows", "github", "openai", "chat", "message", "example", "word",
+        "english", "russian", "language", "input", "space", "auto", "correct", "fix", "fixer", "download", "install"
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     private static readonly FrozenSet<string> CommonRussian = new[]
@@ -32,12 +34,27 @@ internal sealed class LanguageDetector
             return new CorrectionDecision(false, false, LayoutLanguage.Other, word);
         }
 
-        return currentLanguage switch
+        var preferred = currentLanguage switch
         {
             LayoutLanguage.English => AnalyzeEnglishInput(word, autoCorrect),
             LayoutLanguage.Russian => AnalyzeRussianInput(word, autoCorrect),
             _ => new CorrectionDecision(false, false, LayoutLanguage.Other, word)
         };
+        if (preferred.ShouldSwitch)
+        {
+            return preferred;
+        }
+
+        var englishToRussian = AnalyzeEnglishInput(word, autoCorrect);
+        if (englishToRussian.ShouldSwitch)
+        {
+            return englishToRussian;
+        }
+
+        var russianToEnglish = AnalyzeRussianInput(word, autoCorrect);
+        return russianToEnglish.ShouldSwitch
+            ? russianToEnglish
+            : new CorrectionDecision(false, false, LayoutLanguage.Other, word);
     }
 
     private static CorrectionDecision AnalyzeEnglishInput(string word, bool autoCorrect)
@@ -64,7 +81,7 @@ internal sealed class LanguageDetector
         }
 
         var converted = LayoutMaps.ConvertToEnglish(word);
-        if (LooksEnglish(converted) && ScoreEnglish(converted) >= ScoreRussian(word) + 2)
+        if (LooksEnglish(converted) && ScoreEnglishCandidate(converted, word) >= ScoreRussian(word) + 1)
         {
             return new CorrectionDecision(true, autoCorrect, LayoutLanguage.English, converted);
         }
@@ -78,9 +95,28 @@ internal sealed class LanguageDetector
         var score = 0;
         if (CommonEnglish.Contains(lower)) score += 6;
         if (lower.Any(ch => "aeiouy".Contains(ch))) score += 2;
+        if (lower.Count(ch => "aeiouy".Contains(ch)) >= 2) score += 1;
+        if (ContainsAny(lower, "th", "he", "er", "re", "on", "in", "an", "or", "ow", "br", "ro", "se", "la", "ou", "en")) score += 2;
+        if (ContainsAny(lower, "ing", "ion", "ent", "ter", "ver", "ser", "lay", "out", "gram", "word")) score += 2;
         if (lower.Any(ch => "qw[];'`".Contains(ch))) score -= 2;
         if (lower is "ghbdtn" or "ntcn" or "lf" or "ytn") score -= 5;
         if (lower.Length >= 4 && lower.Distinct().Count() >= 3) score += 1;
+        return score;
+    }
+
+    private static int ScoreEnglishCandidate(string converted, string original)
+    {
+        var score = ScoreEnglish(converted);
+        if (original.Any(ch => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё'))
+        {
+            score += 2;
+        }
+
+        if (original.Any(ch => "ъхжэ".Contains(char.ToLowerInvariant(ch))))
+        {
+            score += 1;
+        }
+
         return score;
     }
 
@@ -99,6 +135,8 @@ internal sealed class LanguageDetector
     private static bool LooksEnglish(string word) => word.All(ch => char.IsLetter(ch) && ch <= 127);
 
     private static bool LooksRussian(string word) => word.All(ch => ch is >= 'а' and <= 'я' or 'ё' or >= 'А' and <= 'Я' or 'Ё');
+
+    private static bool ContainsAny(string text, params string[] fragments) => fragments.Any(text.Contains);
 
     private static bool IsEnglishKeyboardChar(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z'
         or '[' or ']' or ';' or '\'' or ',' or '.' or '`';
