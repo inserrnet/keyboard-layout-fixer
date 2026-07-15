@@ -37,7 +37,20 @@ internal static class NativeMethods
     [StructLayout(LayoutKind.Explicit)]
     public struct InputUnion
     {
+        [FieldOffset(0)] public MouseInput Mi;
         [FieldOffset(0)] public KeybdInput Ki;
+        [FieldOffset(0)] public HardwareInput Hi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MouseInput
+    {
+        public int Dx;
+        public int Dy;
+        public uint MouseData;
+        public uint DwFlags;
+        public uint Time;
+        public nint DwExtraInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -48,6 +61,14 @@ internal static class NativeMethods
         public uint DwFlags;
         public uint Time;
         public nint DwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct HardwareInput
+    {
+        public uint UMsg;
+        public ushort WParamL;
+        public ushort WParamH;
     }
 
     [DllImport("user32.dll", SetLastError = true)]
